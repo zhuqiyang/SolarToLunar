@@ -208,21 +208,23 @@ var DateConvert = {
 	getLunarTotalDays:function (year, month, day, leap)
 	{
 		if(typeof leap == undefined) leap = true;
-		for (var sum = 0, lunarYear = 1900; lunarYear < year; lunarYear++){
-			sum += this.yearSum[lunarYear];
+		var sum = 0;
+		for (var i = 1900; i < year; i++){
+			sum += this.yearSum[i];
 		}
-		hex = this.lunarInfomation[year - 1900];
-		for (var i = 0x08000, monthCount = 1; monthCount < month; i >= 0x00010, i >>= 1, monthCount++){
-			sum += (hex & i) ? 30 : 29 ;
-		}
-		leapMonth = hex & 0xf;
-		if(leapMonth)
-		{
-			if(leapMonth < month){
-				sum += hex & 0xf0000 ? 30 : 29;
-			}else if(leapMonth == month && leap){
+		var hex = this.lunarInfomation[year - 1900];
+		var leapMonth = hex & 0xf;
+		for (var i = 0x08000, lunarMonth = 1; i >= 0x00010; i >>= 1, lunarMonth++){
+			if(month == lunarMonth){
+				break;
+			}
+			sum += hex & i ? 30 : 29;
+			if(leapMonth == lunarMonth){
 				sum += hex & 0xf0000 ? 30 : 29;
 			}
+		}
+		if(month == leapMonth && leap){
+			sum += hex & (0x08000 >> lunarMonth - 1) ? 30 : 29;
 		}
 		return sum + day;
 	},
@@ -237,10 +239,11 @@ var DateConvert = {
 		if(typeof leap == undefined) leap = false;
 		var days = 43041;
 		var differ = this.getLunarTotalDays(year, month, day, leap) - days;
-		if(differ < 0){
-			differ = -differ;
+		var index = differ % 60;
+		if(index < 0){
+			index += 60;
 		}
-		return differ % 60;
+		return index;
 	},
 	
 	
